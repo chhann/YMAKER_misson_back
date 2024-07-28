@@ -1,0 +1,32 @@
+spring:
+  profiles:
+    active: local
+    group:
+      local: local, common, secret
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: local
+
+
+server:
+  port: 8080
+  deploy-address: localhost
+  name: local
+
+---
+
+spring:
+  config:
+    activate:
+      on-profile: common
+
+client:
+  deploy-address: "localhost:3000"
+
+mybatis:
+  mapper-locations:
+    - /mappers/*.xml
