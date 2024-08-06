@@ -9,6 +9,8 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper {
+    public int saveUser(User user);
+    public User findUserByUsername(String username);
     public List<User> findUser(
             @Param("userName") String username,
             @Param("name") String name,
@@ -18,8 +20,7 @@ public interface UserMapper {
             @Param("startDate")LocalDateTime startDate,
             @Param("endDate")LocalDateTime endDate
     );
-
-    public int saveUser(User user);
+    public int updateUser(User user);
 
     public int deleteUsersByUserIds(List<Integer> userIds);
 }
