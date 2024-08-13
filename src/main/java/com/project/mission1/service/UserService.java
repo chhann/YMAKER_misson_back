@@ -2,8 +2,8 @@ package com.project.mission1.service;
 
 import com.project.mission1.dto.user.EditUserReqDto;
 import com.project.mission1.dto.user.SearchUserReqDto;
-import com.project.mission1.dto.user.UserReqDto;
-import com.project.mission1.dto.user.UserRespDto;
+import com.project.mission1.dto.user.AddUserReqDto;
+import com.project.mission1.dto.user.SearchUserRespDto;
 import com.project.mission1.entity.User;
 import com.project.mission1.exception.UsernameException;
 import com.project.mission1.repository.UserMapper;
@@ -34,11 +34,11 @@ public class UserService {
 
     // 유저 등록
     @Transactional(rollbackFor = Exception.class)
-    public void insertUser(List<UserReqDto> userRequestDto) {
+    public void insertUser(List<AddUserReqDto> userRequestDto) {
         List<User> users = new ArrayList<>();
 
-        for(UserReqDto userReqDto : userRequestDto) {
-            users.add(userMapper.findUserByUsername(userReqDto.getUsername()));
+        for(AddUserReqDto addUserReqDto : userRequestDto) {
+            users.add(userMapper.findUserByUsername(addUserReqDto.getUsername()));
         }
 
         boolean duplicateResults = checkAllNull(users);
@@ -46,24 +46,26 @@ public class UserService {
         if(!duplicateResults) {
             throw new UsernameException(Map.of("Username 오류", "이미 존재하는 아이디가 있습니다."));
         } else {
-            for(UserReqDto userReqDto : userRequestDto) {
-                userMapper.saveUser(userReqDto.toEntity());
+            for(AddUserReqDto addUserReqDto : userRequestDto) {
+                User user = addUserReqDto.toEntity();
+                userMapper.saveUser(user);
+                userMapper.saveCityRegister(addUserReqDto.toCityRegister(user.getUserId()));
             }
         }
     }
 
     // 유저 조회
-    public List<UserRespDto> getUser(SearchUserReqDto searchUserReqDto) {
+    public List<SearchUserRespDto> getUser(SearchUserReqDto searchUserReqDto) {
         List<User> userList = userMapper.findUser(
                 searchUserReqDto.getUserName(),
                 searchUserReqDto.getName(),
                 searchUserReqDto.getGender(),
                 searchUserReqDto.getCountryId(),
-                searchUserReqDto.getCityId(),
+                searchUserReqDto.getSelectedCitiesList(),
                 searchUserReqDto.getStartDate(),
                 searchUserReqDto.getEndDate()
         );
-        System.out.println(searchUserReqDto.getUserName());
+
         return userList.stream().map(User::toRespDto).collect(Collectors.toList());
     }
 

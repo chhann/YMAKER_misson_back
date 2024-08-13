@@ -2,7 +2,7 @@ package com.project.mission1.controller;
 
 import com.project.mission1.dto.user.EditUserReqDto;
 import com.project.mission1.dto.user.SearchUserReqDto;
-import com.project.mission1.dto.user.UserReqDto;
+import com.project.mission1.dto.user.AddUserReqDto;
 import com.project.mission1.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -19,7 +19,7 @@ public class UserController {
 
     // 유저 추가
     @PostMapping("/information")
-    public ResponseEntity<?> addUser(@RequestBody List<UserReqDto> userRequestDto) {
+    public ResponseEntity<?> addUser(@RequestBody List<AddUserReqDto> userRequestDto) {
         userService.insertUser(userRequestDto);
         return ResponseEntity.created(null).body(true);
     }

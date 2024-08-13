@@ -20,7 +20,6 @@ public class EditUserReqDto {
                 .name(name)
                 .gender(gender)
                 .countryId(countryId)
-                .cityId(cityId)
                 .build();
     }
 }
