@@ -43,7 +43,8 @@
                 (0, #{cityRegister.userId}, #{cityRegister.cityId}, #{cityRegister.cityName}, now(), now())
             </foreach>
     </insert>
-    
+
+
     <select id="findUser" resultMap="UserResultMap">
         select
             ut.user_id,
@@ -52,51 +53,67 @@
             ut.gender,
             ut.country_id,
             ct.country_name,
-            crt.city_id,
-            crt.city_name,
             ut.create_date,
-            ut.update_date
+            ut.update_date,
+            crt.city_register_id,
+            crt.city_id,
+            crt.city_name
         from
-            user_tb ut
+            (
+                select
+                    user_id
+                from
+                    user_tb
+                where
+                    1 = 1
+                    <if test="userName != ''">
+                        and username = #{userName}
+                    </if>
+                    <if test="name != ''">
+                        and name = #{name}
+                    </if>
+                    <if test="gender != ''">
+                        and gender = #{gender}
+                    </if>
+                    <if test="countryId != 0">
+                        and country_id = #{countryId}
+                    </if>
+                    <if test="startDate != null and endDate != null">
+                        and update_date BETWEEN #{startDate} AND #{endDate}
+                    </if>
+                    <if test="startDate != null and endDate == null">
+                        and update_date >= #{startDate}
+                    </if>
+                    <if test="startDate == null and endDate != null">
+                        and #{endDate} >= ut.update_date
+                    </if>
+                order by
+                    update_date DESC
+                limit
+                    #{startIndex}, #{count}
+            ) filtered_users
+            left outer join user_tb ut on (ut.user_id = filtered_users.user_id)
             left outer join country_tb ct on (ct.country_id = ut.country_id)
-            left outer join city_register_tb crt on (crt.user_id = ut.user_id)
+            left outer join (select DISTINCT
+                                crt.city_register_id,
+                                crt.user_id,
+                                crt.city_id,
+                                crt.city_name
+                            from
+                                city_register_tb crt
+                            ) crt on (crt.user_id = ut.user_id)
         where
             1 = 1
-            <if test="userName != ''">
-                and ut.username = #{userName}
-            </if>
-            <if test="name != ''">
-                and ut.name = #{name}
-            </if>
-            <if test="gender != ''">
-                and ut.gender = #{gender}
-            </if>
-            <if test="countryId != 0">
-                and ut.country_id = #{countryId}
-            </if>
             <if test="SelectedCitiesList != null and SelectedCitiesList.size() > 0">
-                and ut.user_id in (
-                select user_id
-                from city_register_tb
-                where city_id in
+                and crt.city_id in
                 <foreach item="cityId" index="index" collection="SelectedCitiesList" open="(" separator="," close=")">
                     #{cityId}
                 </foreach>
-                )
             </if>
-            <choose>
-                <when test="startDate != null and endDate != null">
-                    and ut.update_date between #{startDate} and #{endDate}
-                </when>
-                <when test="startDate != null and endDate == null">
-                    and ut.update_date >= #{startDate}
-                </when>
-                <when test="startDate == null and endDate != null">
-                    and #{endDate} >= ut.update_date
-                </when>
-            </choose>
-        order by ut.update_date desc
+        order by
+            ut.update_date DESC
     </select>
+
 
     <select id="findUserByUsername" parameterType="string" resultMap="UserResultMap">
         select
@@ -118,6 +135,53 @@
             ut.username = #{username}
     </select>
 
+    <select id="getUserCount" resultType="integer">
+        select
+            count(distinct ut.user_id)
+        from
+            user_tb ut
+            left outer join country_tb ct on (ct.country_id = ut.country_id)
+            left outer join city_register_tb crt on (crt.user_id = ut.user_id)
+        where
+            1 = 1
+            <if test="userName != ''">
+                and ut.username = #{userName}
+            </if>
+            <if test="name != ''">
+                and ut.name = #{name}
+            </if>
+            <if test="gender != ''">
+                and ut.gender = #{gender}
+            </if>
+            <if test="countryId != 0">
+                and ut.country_id = #{countryId}
+            </if>
+            <if test="SelectedCitiesList != null and SelectedCitiesList.size() > 0">
+                and crt.city_id in (
+                    select
+                        city_id
+                    from
+                        city_register_tb
+                    where
+                        city_id in
+                        <foreach item="cityId" index="index" collection="SelectedCitiesList" open="(" separator="," close=")">
+                            #{cityId}
+                        </foreach>
+                    )
+            </if>
+            <choose>
+                <when test="startDate != null and endDate != null">
+                    and ut.update_date between #{startDate} and #{endDate}
+                </when>
+                <when test="startDate != null and endDate == null">
+                    and ut.update_date >= #{startDate}
+                </when>
+                <when test="startDate == null and endDate != null">
+                    and #{endDate} >= ut.update_date
+                </when>
+            </choose>
+    </select>
+
     <update id="updateUser">
         update
             user_tb
@@ -126,10 +190,22 @@
             name = #{name},
             gender = #{gender},
             country_id = #{countryId},
-            city_id = #{cityId},
             update_date = now()
         where
             user_id = #{userId}
+    </update>
+
+    <update id="updateCityRegister">
+        <foreach collection="cityRegisters" item="cityRegister" separator=";">
+            update
+                city_register_tb
+            set
+                city_id = #{cityRegister.cityId},
+                city_name = #{cityRegister.cityName},
+                update_date = now()
+            where
+                user_id = #{cityRegister.userId}
+        </foreach>
     </update>
 
     <delete id="deleteUsersByUserIds" parameterType="list">

@@ -18,6 +18,8 @@ import java.util.List;
 @AllArgsConstructor
 @Data
 public class SearchUserReqDto {
+    private int page;
+    private int count;
     private String userName;
     private String name;
     private String gender;

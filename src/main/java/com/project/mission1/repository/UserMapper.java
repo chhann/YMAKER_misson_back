@@ -15,6 +15,17 @@ public interface UserMapper {
     public int saveCityRegister(List<CityRegister> cityRegisters);
     public User findUserByUsername(String username);
     public List<User> findUser(
+            @Param("startIndex") int startIndex,
+            @Param("count") int count,
+            @Param("userName") String username,
+            @Param("name") String name,
+            @Param("gender") String gender,
+            @Param("countryId") int countryId,
+            @Param("SelectedCitiesList")List<Integer> selectedCities,
+            @Param("startDate")LocalDateTime startDate,
+            @Param("endDate")LocalDateTime endDate
+    );
+    public int getUserCount(
             @Param("userName") String username,
             @Param("name") String name,
             @Param("gender") String gender,
@@ -24,6 +35,6 @@ public interface UserMapper {
             @Param("endDate")LocalDateTime endDate
     );
     public int updateUser(User user);
-
+    public int updateCityRegister(List<CityRegister> cityRegisters);
     public int deleteUsersByUserIds(List<Integer> userIds);
 }

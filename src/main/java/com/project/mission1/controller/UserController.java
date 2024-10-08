@@ -30,6 +30,12 @@ public class UserController {
         return ResponseEntity.ok(userService.getUser(searchUserReqDto));
     }
 
+    // 유저 갯수 조회
+    @GetMapping("/count")
+    public ResponseEntity<?> getCount(SearchUserReqDto searchUserReqDto) {
+        return ResponseEntity.ok(userService.getUserCount(searchUserReqDto));
+    }
+
     // 유저 변경
     @PutMapping("/information")
     public ResponseEntity<?> updateUser(@RequestBody EditUserReqDto editUserReqDto) {

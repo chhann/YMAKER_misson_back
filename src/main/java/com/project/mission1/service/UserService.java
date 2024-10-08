@@ -1,9 +1,6 @@
 package com.project.mission1.service;
 
-import com.project.mission1.dto.user.EditUserReqDto;
-import com.project.mission1.dto.user.SearchUserReqDto;
-import com.project.mission1.dto.user.AddUserReqDto;
-import com.project.mission1.dto.user.SearchUserRespDto;
+import com.project.mission1.dto.user.*;
 import com.project.mission1.entity.User;
 import com.project.mission1.exception.UsernameException;
 import com.project.mission1.repository.UserMapper;
@@ -56,7 +53,12 @@ public class UserService {
 
     // 유저 조회
     public List<SearchUserRespDto> getUser(SearchUserReqDto searchUserReqDto) {
+        int startIndex = (searchUserReqDto.getPage() - 1) * searchUserReqDto.getCount();
+
+
         List<User> userList = userMapper.findUser(
+                startIndex,
+                searchUserReqDto.getCount(),
                 searchUserReqDto.getUserName(),
                 searchUserReqDto.getName(),
                 searchUserReqDto.getGender(),
@@ -66,16 +68,44 @@ public class UserService {
                 searchUserReqDto.getEndDate()
         );
 
+
         return userList.stream().map(User::toRespDto).collect(Collectors.toList());
+    }
+
+    // 유저 갯수 조회
+    public SearchUserCountRespDto getUserCount(SearchUserReqDto searchUserReqDto) {
+        int userCount = userMapper.getUserCount(
+                searchUserReqDto.getUserName(),
+                searchUserReqDto.getName(),
+                searchUserReqDto.getGender(),
+                searchUserReqDto.getCountryId(),
+                searchUserReqDto.getSelectedCitiesList(),
+                searchUserReqDto.getStartDate(),
+                searchUserReqDto.getEndDate()
+        );
+        int maxPageNumber = (int) Math.ceil(((double) userCount) / searchUserReqDto.getCount());
+
+
+        return SearchUserCountRespDto.builder()
+                .totalCount(userCount)
+                .maxPageNumber(maxPageNumber)
+                .build();
     }
 
     // 유저 정보 변경
     @Transactional(rollbackFor = Exception.class)
     public void updateUser(EditUserReqDto editUserReqDto) {
-        if(userMapper.findUserByUsername(editUserReqDto.getUsername()) != null) {
+        User findUser = userMapper.findUserByUsername(editUserReqDto.getUsername());
+
+
+
+        if(findUser != null && !findUser.getUserName().equals(editUserReqDto.getUsername())) {
             throw new UsernameException(Map.of("Username오류", "이미 존재하는 아이디가 있습니다."));
         } else {
-            userMapper.updateUser(editUserReqDto.toEntity());
+            User user = editUserReqDto.toEntity();
+            userMapper.updateUser(user);
+            System.out.println(editUserReqDto.toCityRegister(user.getUserId()));
+            userMapper.updateCityRegister(editUserReqDto.toCityRegister(user.getUserId()));
         }
     }
 
